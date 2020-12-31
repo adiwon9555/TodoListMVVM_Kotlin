@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="6dp"
+    xmlns:tools="http://schemas.android.com/tools">
+    <com.google.android.material.checkbox.MaterialCheckBox
+        android:id="@+id/checkbox_complete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="My Task"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textColor="@color/black"
+        android:layout_toStartOf="@+id/priority_icon"
+        android:layout_toEndOf="@id/checkbox_complete"
+        android:gravity="center_vertical"
+        android:layout_alignTop="@id/checkbox_complete"
+        android:layout_alignBottom="@+id/checkbox_complete"/>
+
+    <ImageView
+        android:id="@+id/priority_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:src="@drawable/ic_priority"
+        android:gravity="center_vertical"
+        android:layout_alignTop="@id/checkbox_complete"
+        android:layout_alignBottom="@+id/checkbox_complete"/>
+<!--        android:layout_centerVertical="true"-->
+<!--        />-->
+
+</RelativeLayout>
