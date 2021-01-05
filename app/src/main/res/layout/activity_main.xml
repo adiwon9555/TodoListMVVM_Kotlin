@@ -13,5 +13,10 @@
         android:name="androidx.navigation.fragment.NavHostFragment"
         app:defaultNavHost="true"
         app:navGraph="@navigation/nav_graph"/>
+<!--    Above we are defining the fragmant container.-->
+<!--    android:name -> the class defined here contains the business logic for the navigation-->
+<!--    and how fragments are placed.-->
+<!--    app:defaultNavHost -> this will all the class to handle back navigation properly-->
+<!--    -->
 
 </androidx.constraintlayout.widget.ConstraintLayout>
