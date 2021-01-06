@@ -2,14 +2,17 @@ package com.codinginflow.mvvmtodo.ui.tasks
 
 import android.os.Bundle
 import android.util.Log
-import android.view.View
+import android.view.*
 import android.widget.LinearLayout
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.codinginflow.mvvmtodo.R
 import com.codinginflow.mvvmtodo.databinding.FragmanTasksBinding
+import com.codinginflow.mvvmtodo.databinding.ItemTaskBinding
+import com.codinginflow.mvvmtodo.utils.onQueryTextChanged
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -50,5 +53,58 @@ class TasksFragment: Fragment(R.layout.fragman_tasks) {
             taskAdapter.submitList(it)
         })
         //2nd parameter of observe is a lambda, which can be written in this way ( sort of an inner class or callback)
+
+        //To show menu in this fragmant
+        setHasOptionsMenu(true)
+    }
+    //For menu on topbar
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        //Inflaing and adding menu for our fragmant
+        //Note:- data bindin is available only for layout files, hence we reference with id here
+        inflater.inflate(R.menu.fragmant_task_menu,menu)
+        val searchItem = menu.findItem(R.id.search_task_icon)
+
+        //as is casting the view to SearchView
+        //actionView for search item is the view that is shown as textbox when searchicon is clicked
+        //kotlin has shorthand syntax for getter and setter which can be directly called with the proerty name
+        val searchView = searchItem.actionView as SearchView
+
+        //Below we can write directy write what we want to do when a text is typed in searchView but, we will create a util to do this
+        //This is the funciton we create in utils that is expecting a listener lambda function
+        //So we trailing lambda syntax that can be written without parenthesis
+        //Note:- Writing return normally in lambda function is allowed but since we have used inline with crossinline keyword, so not allowed
+        searchView.onQueryTextChanged {
+            //setting the searchVal in viewModel that is trigger a query on room table
+            //Which will emit new flow of data and collected a live data in recyclerview
+            viewModel.searchVal.value = it
+        }
+
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        //when is switch case of kotlin
+        return when(item.getItemId()){
+            R.id.sort_by_name_menu ->{
+                //aas return is written above, here we can only write true
+                //true means task is done, giving false means let system handle default action
+                true
+            }
+
+            R.id.sort_by_date_menu -> {
+                    true
+            }
+            R.id.hide_completed_menu -> {
+                item.isChecked = !item.isChecked
+
+                true
+            }
+
+            R.id.delete_all_menu ->{
+                true
+            }
+
+            else ->
+                super.onOptionsItemSelected(item)
+        }
     }
 }

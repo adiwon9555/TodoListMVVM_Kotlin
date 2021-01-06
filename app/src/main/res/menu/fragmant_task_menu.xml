@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/search_task_icon"
+        android:title="Search Task"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="always|collapseActionView"
+        android:icon="@drawable/ic_search"
+        />
+    <!--    actionViewClass adds a searchbar where we can type-->
+    <item
+        android:icon="@drawable/ic_sort"
+        app:showAsAction="always"
+        android:title="Sort"
+        >
+        <menu>
+            <item
+                android:id="@+id/sort_by_name_menu"
+                android:title="Sort by Name"/>
+            <item
+                android:id="@+id/sort_by_date_menu"
+                android:title="Sort by Date Created"/>
+        </menu>
+    </item>
+
+    <item
+        android:id="@+id/hide_completed_menu"
+        android:title="Hide Completed"
+        app:showAsAction="never"
+        android:checkable="true"
+        />
+    <item
+        android:id="@+id/delete_all_menu"
+        android:title="Delete all"
+        app:showAsAction="never"
+        />
+
+
+
+
+
+
+</menu>

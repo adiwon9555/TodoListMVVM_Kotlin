@@ -6,9 +6,10 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface TaskDao {
 
-    @Query("SELECT * FROM task_table")
+    // || is append
+    @Query("SELECT * FROM task_table where taskName LIKE '%' || :searchText || '%' ORDER BY important DESC")
     //Flow is built on top of coroutine hence, suspend for this function is not needed.
-    fun getAllTask() : Flow<List<Task>>
+    fun getAllTask(searchText : String) : Flow<List<Task>>
 
 
     //Since db operation can take time to complete hence we call it with suspend function which will run in a coroutine
