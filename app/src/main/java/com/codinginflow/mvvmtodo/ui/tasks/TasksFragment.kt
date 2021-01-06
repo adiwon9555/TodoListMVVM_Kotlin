@@ -18,11 +18,11 @@ import javax.inject.Inject
 
 //Adds DI container to the class
 @AndroidEntryPoint
-class TasksFragment: Fragment(R.layout.fragman_tasks) {
+class TasksFragment : Fragment(R.layout.fragman_tasks) {
 
     //by viewModels() is property delegate and using this way also will inject dependency as we have used @AndroidEntryPoint
     //TODO: Read property delegate
-    private val viewModel : TaskViewModel by viewModels()
+    private val viewModel: TaskViewModel by viewModels()
 
     //is called when layout was instantiated
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -49,7 +49,7 @@ class TasksFragment: Fragment(R.layout.fragman_tasks) {
         //Fragmant has two lifecycle - lifecycle of its object and its view
         //on moving to new fragmant, current fragmant object is put to backstack and only view is destroyed
         //here we want the viewLifecycle always because as soon as View is destroyed in case to rotate or navigate, livedata stops event dispatching
-        viewModel.tasks.observe(viewLifecycleOwner , Observer{
+        viewModel.tasks.observe(viewLifecycleOwner, Observer {
             taskAdapter.submitList(it)
         })
         //2nd parameter of observe is a lambda, which can be written in this way ( sort of an inner class or callback)
@@ -57,11 +57,12 @@ class TasksFragment: Fragment(R.layout.fragman_tasks) {
         //To show menu in this fragmant
         setHasOptionsMenu(true)
     }
+
     //For menu on topbar
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         //Inflaing and adding menu for our fragmant
         //Note:- data bindin is available only for layout files, hence we reference with id here
-        inflater.inflate(R.menu.fragmant_task_menu,menu)
+        inflater.inflate(R.menu.fragmant_task_menu, menu)
         val searchItem = menu.findItem(R.id.search_task_icon)
 
         //as is casting the view to SearchView
@@ -83,23 +84,25 @@ class TasksFragment: Fragment(R.layout.fragman_tasks) {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         //when is switch case of kotlin
-        return when(item.getItemId()){
-            R.id.sort_by_name_menu ->{
+        return when (item.getItemId()) {
+            R.id.sort_by_name_menu -> {
                 //aas return is written above, here we can only write true
                 //true means task is done, giving false means let system handle default action
+                viewModel.sortOrder.value = SortOrder.BY_NAME
                 true
             }
 
             R.id.sort_by_date_menu -> {
-                    true
+                viewModel.sortOrder.value = SortOrder.BY_DATE
+                true
             }
             R.id.hide_completed_menu -> {
                 item.isChecked = !item.isChecked
-
+                viewModel.hideComleted.value = item.isChecked
                 true
             }
 
-            R.id.delete_all_menu ->{
+            R.id.delete_all_menu -> {
                 true
             }
 
