@@ -1,12 +1,10 @@
 package com.codinginflow.mvvmtodo.ui.tasks
 
+import androidx.hilt.Assisted
 import androidx.hilt.lifecycle.ViewModelInject
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.codinginflow.mvvmtodo.data.PreferencesManager
 import com.codinginflow.mvvmtodo.data.SortOrder
-import com.codinginflow.mvvmtodo.data.SortOrder.*
 import com.codinginflow.mvvmtodo.data.Task
 import com.codinginflow.mvvmtodo.data.TaskDao
 import kotlinx.coroutines.channels.Channel
@@ -15,12 +13,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 //For ViewModel we use @ViewModelInject to tell hilt how to provide an instance of Architecture component ViewModel
 class TaskViewModel @ViewModelInject constructor(
     private val taskDao: TaskDao,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    @Assisted private val state: SavedStateHandle
 ) : ViewModel() {
     //asLivedata  converts flow to livedata, conventional practice as in view layer we use LiveData because
     //Livedata makes handling lifecycle of data easier as it is lifecycle aware
@@ -30,7 +28,11 @@ class TaskViewModel @ViewModelInject constructor(
 
     //MutablestateFLow is a flow that is listening for new data (HERE ->  from the UI as producer )
     //passing empty string as default init value
-    val searchVal = MutableStateFlow("")
+//    val searchVal = MutableStateFlow("")
+
+    //We will make seach val to be stored in SavedStateHandle ( savedStateInstace) so that the search value is persisted
+    //We make to livedata as converting to flow is easier and also we dont need to set the state with latest value, as it updates itself
+    val searchVal = state.getLiveData<String>("searchQuery","")
 
 //    val sortOrder = MutableStateFlow(BY_DATE)
 //    val hideComleted = MutableStateFlow(false)
@@ -67,7 +69,7 @@ class TaskViewModel @ViewModelInject constructor(
     val preferencesFLow = preferencesManager.preferencesFLow
 
     val searchedTaskFlow = combine(
-        searchVal,preferencesFLow
+        searchVal.asFlow(),preferencesFLow
     ){ searchVal, preferencesFLow ->
         Pair(searchVal,preferencesFLow)
     }.flatMapLatest {(searchVal, preferencesFLow)  ->
@@ -89,9 +91,7 @@ class TaskViewModel @ViewModelInject constructor(
         }
     }
 
-    fun onTaskSelected(task: Task){
 
-    }
 
     fun onTaskCheckedChanged(task: Task, isChecked: Boolean){
         //Since our properties of task is immutable with val so we use copy
@@ -109,7 +109,7 @@ class TaskViewModel @ViewModelInject constructor(
             //So for undoDelete action we need to give information to fragment regarding it, and fragmant will decide how to show
             //Hence, for this kind of event transmission best practice in kotlin is to use channel that helps to transfer event from one coroutine to another
             //We can use channels with flow that can suspend collection until the coroutine is active
-            taskEventChannel.send(TasksEvent.showUndoDeleteTaskMessage(task))
+            taskEventChannel.send(TasksEvent.ShowUndoDeleteTaskMessage(task))
             //Why not possible
 //            deletedTask.value = task
             //Fragmant will be listening to this
@@ -126,11 +126,21 @@ class TaskViewModel @ViewModelInject constructor(
 
 
     }
+    fun onTaskSelected(task: Task)= viewModelScope.launch{
+        taskEventChannel.send(TasksEvent.NavigateToEditTaskScreen(task))
+    }
+
+    fun onAddNewTaskClick() = viewModelScope.launch{
+        taskEventChannel.send(TasksEvent.NavigateToAddTaskScreen)
+    }
 
     //This will hold different kinds of events
     //Sealed class is an enum that can represent a closed combination of diff values which can contain data as actual objects
+    //Events to tell fragmant to what to do
     sealed class TasksEvent{
-        data class showUndoDeleteTaskMessage(val task: Task) : TasksEvent()
+        data class NavigateToEditTaskScreen(val task: Task) : TasksEvent()
+        object NavigateToAddTaskScreen : TasksEvent()
+        data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
 
     }
 

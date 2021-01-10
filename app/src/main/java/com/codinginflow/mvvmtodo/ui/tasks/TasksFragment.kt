@@ -1,30 +1,28 @@
 package com.codinginflow.mvvmtodo.ui.tasks
 
 import android.os.Bundle
-import android.util.Log
 import android.view.*
-import android.widget.LinearLayout
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.codinginflow.mvvmtodo.R
-import com.codinginflow.mvvmtodo.data.PreferencesManager
 import com.codinginflow.mvvmtodo.data.SortOrder
 import com.codinginflow.mvvmtodo.data.Task
 import com.codinginflow.mvvmtodo.databinding.FragmanTasksBinding
-import com.codinginflow.mvvmtodo.databinding.ItemTaskBinding
+import com.codinginflow.mvvmtodo.utils.exhaustive
 import com.codinginflow.mvvmtodo.utils.onQueryTextChanged
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.android.synthetic.main.fragman_tasks.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 //Adds DI container to the class
 @AndroidEntryPoint
@@ -70,6 +68,10 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
                     viewModel.onTaskSwipeToDelete(task);
                 }
             }).attachToRecyclerView(recyclerViewTask)
+            
+            fab_add_task.setOnClickListener{
+                viewModel.onAddNewTaskClick()
+            }
         }
 
         //first parameter of observe is which lifecycle we want the livedata to be aware of
@@ -88,14 +90,25 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
         viewLifecycleOwner.lifecycleScope.launchWhenStarted {
             viewModel.tasksEvent.collect { events ->
                 when(events){
-                    is TaskViewModel.TasksEvent.showUndoDeleteTaskMessage ->
+                    is TaskViewModel.TasksEvent.ShowUndoDeleteTaskMessage -> {
                         Snackbar.make(requireView(),"Task Deleted",Snackbar.LENGTH_LONG)
                             .setAction("UNDO"){
                                 //smart cast
                                 //Again giving control to viewModel to handle login
                                 viewModel.onUndoDeleteTask(events.task)
                             }.show()
-                }
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToEditTaskScreen -> {
+                        //Need to Rebuild project to make this class available
+                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(events.task,"Edit Task")
+                        findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.NavigateToAddTaskScreen -> {
+                        //Need to Rebuild project to make this class available
+                        val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(null,"New Task")
+                        findNavController().navigate(action)
+                    }
+                }.exhaustive
             }
         }
 
@@ -114,6 +127,8 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
 //            }
 //        }
 
+        
+        
 
 
     }
@@ -183,7 +198,7 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
 
 
     override fun onItemClick(task: Task) {
-
+        viewModel.onTaskSelected(task)
     }
 
     override fun onCheckBoxClick(task: Task, isChecked: Boolean) {
