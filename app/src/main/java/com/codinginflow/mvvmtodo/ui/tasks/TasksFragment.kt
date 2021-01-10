@@ -8,17 +8,27 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.codinginflow.mvvmtodo.R
+import com.codinginflow.mvvmtodo.data.PreferencesManager
+import com.codinginflow.mvvmtodo.data.SortOrder
+import com.codinginflow.mvvmtodo.data.Task
 import com.codinginflow.mvvmtodo.databinding.FragmanTasksBinding
 import com.codinginflow.mvvmtodo.databinding.ItemTaskBinding
 import com.codinginflow.mvvmtodo.utils.onQueryTextChanged
+import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 //Adds DI container to the class
 @AndroidEntryPoint
-class TasksFragment : Fragment(R.layout.fragman_tasks) {
+class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickListener {
 
     //by viewModels() is property delegate and using this way also will inject dependency as we have used @AndroidEntryPoint
     //TODO: Read property delegate
@@ -30,8 +40,8 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
 
 
         val binding = FragmanTasksBinding.bind(view)
-
-        val taskAdapter = TaskAdapter()
+        //Since our class is implementing the TaskAdapter.onItemClickListener, we can pass this here
+        val taskAdapter = TaskAdapter(this)
 
         binding.apply {
             recyclerViewTask.apply {
@@ -43,6 +53,23 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
                 //TODO: CHECK HOW THIS IS DONE
                 setHasFixedSize(true)
             }
+            //For swipe gesture control
+            ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(0
+                ,ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT) {
+                //for drag and drop
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder
+                ): Boolean {
+                    return false
+                }
+
+                override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                    val task = taskAdapter.currentList[viewHolder.adapterPosition]
+                    viewModel.onTaskSwipeToDelete(task);
+                }
+            }).attachToRecyclerView(recyclerViewTask)
         }
 
         //first parameter of observe is which lifecycle we want the livedata to be aware of
@@ -56,6 +83,39 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
 
         //To show menu in this fragmant
         setHasOptionsMenu(true)
+
+        //using launchWhenStarted to shorten the scope more that starts only when view is started
+        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+            viewModel.tasksEvent.collect { events ->
+                when(events){
+                    is TaskViewModel.TasksEvent.showUndoDeleteTaskMessage ->
+                        Snackbar.make(requireView(),"Task Deleted",Snackbar.LENGTH_LONG)
+                            .setAction("UNDO"){
+                                //smart cast
+                                //Again giving control to viewModel to handle login
+                                viewModel.onUndoDeleteTask(events.task)
+                            }.show()
+                }
+            }
+        }
+
+        //TODO:Why is this not possible
+//        viewLifecycleOwner.lifecycleScope.launchWhenStarted {
+//            viewModel.deletedTask.collect { task ->
+//                if(task.id != -1){
+//                    Snackbar.make(requireView(),"Task Deleted",Snackbar.LENGTH_LONG)
+//                        .setAction("UNDO"){
+//                            //smart cast
+//                            //Again giving control to viewModel to handle login
+//                            viewModel.onUndoDeleteTask(task)
+//                        }.show()
+//                }
+//
+//            }
+//        }
+
+
+
     }
 
     //For menu on topbar
@@ -79,7 +139,13 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
             //Which will emit new flow of data and collected a live data in recyclerview
             viewModel.searchVal.value = it
         }
-
+        //On create we need to set the checked value of hideCompleted as according to saved value in datastore preference
+        //Filtered sorted data is always returned with datastore preference.
+        viewLifecycleOwner.lifecycleScope.launch {
+            //first collects only once and does not keep listening
+            menu.findItem(R.id.hide_completed_menu).isChecked =
+                viewModel.preferencesFLow.first().hideCompleted
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -88,18 +154,22 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
             R.id.sort_by_name_menu -> {
                 //aas return is written above, here we can only write true
                 //true means task is done, giving false means let system handle default action
-                viewModel.sortOrder.value = SortOrder.BY_NAME
+//                viewModel.sortOrder.value = SortOrder.BY_NAME
+                viewModel.onSortOrderSelected(SortOrder.BY_NAME)
                 true
             }
 
             R.id.sort_by_date_menu -> {
-                viewModel.sortOrder.value = SortOrder.BY_DATE
+//                viewModel.sortOrder.value = SortOrder.BY_DATE
+                viewModel.onSortOrderSelected(SortOrder.BY_DATE)
                 true
             }
             R.id.hide_completed_menu -> {
                 item.isChecked = !item.isChecked
-                viewModel.hideComleted.value = item.isChecked
+//                viewModel.hideComleted.value = item.isChecked
+                viewModel.onHideCompletedChecked(item.isChecked)
                 true
+
             }
 
             R.id.delete_all_menu -> {
@@ -109,5 +179,14 @@ class TasksFragment : Fragment(R.layout.fragman_tasks) {
             else ->
                 super.onOptionsItemSelected(item)
         }
+    }
+
+
+    override fun onItemClick(task: Task) {
+
+    }
+
+    override fun onCheckBoxClick(task: Task, isChecked: Boolean) {
+        viewModel.onTaskCheckedChanged(task, isChecked)
     }
 }
