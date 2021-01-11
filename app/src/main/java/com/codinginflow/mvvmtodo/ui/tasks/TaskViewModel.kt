@@ -147,6 +147,10 @@ class TaskViewModel @ViewModelInject constructor(
         taskEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(s))
     }
 
+    fun onDeleteAllCompletedClick() = viewModelScope.launch {
+        taskEventChannel.send(TasksEvent.NavigateToDeleteAllCompletedScreen)
+    }
+
     //This will hold different kinds of events
     //Sealed class is an enum that can represent a closed combination of diff values which can contain data as actual objects
     //Events to tell fragmant to what to do
@@ -155,6 +159,7 @@ class TaskViewModel @ViewModelInject constructor(
         object NavigateToAddTaskScreen : TasksEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
         data class ShowTaskSavedConfirmationMessage(val message: String) : TasksEvent()
+        object NavigateToDeleteAllCompletedScreen : TasksEvent()
 
     }
 

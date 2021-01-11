@@ -28,4 +28,8 @@
             android:name="title"
             app:argType="string" />
     </fragment>
+    <dialog
+        android:id="@+id/deleteCompletedFragmant"
+        android:name="com.codinginflow.mvvmtodo.ui.deleteCompletedTask.DeleteCompletedFragmant"
+        android:label="DeleteCompletedFragmant" /><action android:id="@+id/action_global_deleteCompletedFragmant" app:destination="@id/deleteCompletedFragmant"/>
 </navigation>

@@ -32,7 +32,7 @@
         />
     <item
         android:id="@+id/delete_all_menu"
-        android:title="Delete all"
+        android:title="Delete all Completed"
         app:showAsAction="never"
         />
 
