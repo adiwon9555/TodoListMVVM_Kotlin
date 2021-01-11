@@ -1,5 +1,6 @@
 package com.codinginflow.mvvmtodo.ui
 
+import android.app.Activity
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.navigation.NavController
@@ -35,3 +36,8 @@ class MainActivity : AppCompatActivity() {
         return navController.navigateUp() || super.onSupportNavigateUp()
     }
 }
+//This values is to represent if the task completed from AddEditTaskFragmant was add or edit
+//We are using values other that RESULT_OK and RESULT_CANCEL
+//RESULT_FIRST_USER is 1 and we can increment it for other cases ( just a convention)
+const val ADD_TASK_RESULT_OK = Activity.RESULT_FIRST_USER
+const val EDIT_TASK_RESULT_OK = Activity.RESULT_FIRST_USER + 1

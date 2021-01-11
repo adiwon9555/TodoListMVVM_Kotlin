@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.*
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.setFragmentResult
+import androidx.fragment.app.setFragmentResultListener
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
@@ -74,6 +76,12 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
             }
         }
 
+        //To recieve the data passed from other fragmant
+        setFragmentResultListener("add_edit_request"){_,bundle ->
+            val result = bundle.getInt("add_edit_result")
+            viewModel.addEditTaskResult(result)
+        }
+
         //first parameter of observe is which lifecycle we want the livedata to be aware of
         //Fragmant has two lifecycle - lifecycle of its object and its view
         //on moving to new fragmant, current fragmant object is put to backstack and only view is destroyed
@@ -107,6 +115,9 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
                         //Need to Rebuild project to make this class available
                         val action = TasksFragmentDirections.actionTasksFragmentToAddEditTaskFragment(null,"New Task")
                         findNavController().navigate(action)
+                    }
+                    is TaskViewModel.TasksEvent.ShowTaskSavedConfirmationMessage -> {
+                        Snackbar.make(requireView(),events.message,Snackbar.LENGTH_SHORT).show()
                     }
                 }.exhaustive
             }

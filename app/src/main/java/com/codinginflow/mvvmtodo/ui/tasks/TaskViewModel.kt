@@ -7,6 +7,8 @@ import com.codinginflow.mvvmtodo.data.PreferencesManager
 import com.codinginflow.mvvmtodo.data.SortOrder
 import com.codinginflow.mvvmtodo.data.Task
 import com.codinginflow.mvvmtodo.data.TaskDao
+import com.codinginflow.mvvmtodo.ui.ADD_TASK_RESULT_OK
+import com.codinginflow.mvvmtodo.ui.EDIT_TASK_RESULT_OK
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
@@ -134,6 +136,17 @@ class TaskViewModel @ViewModelInject constructor(
         taskEventChannel.send(TasksEvent.NavigateToAddTaskScreen)
     }
 
+    fun addEditTaskResult(result: Int) {
+        when(result){
+            ADD_TASK_RESULT_OK -> showTaskSavedConfirmationMessage("Task added Successfully")
+            EDIT_TASK_RESULT_OK -> showTaskSavedConfirmationMessage("Task updated Successfully")
+        }
+    }
+
+    private fun showTaskSavedConfirmationMessage(s: String) = viewModelScope.launch{
+        taskEventChannel.send(TasksEvent.ShowTaskSavedConfirmationMessage(s))
+    }
+
     //This will hold different kinds of events
     //Sealed class is an enum that can represent a closed combination of diff values which can contain data as actual objects
     //Events to tell fragmant to what to do
@@ -141,6 +154,7 @@ class TaskViewModel @ViewModelInject constructor(
         data class NavigateToEditTaskScreen(val task: Task) : TasksEvent()
         object NavigateToAddTaskScreen : TasksEvent()
         data class ShowUndoDeleteTaskMessage(val task: Task) : TasksEvent()
+        data class ShowTaskSavedConfirmationMessage(val message: String) : TasksEvent()
 
     }
 
