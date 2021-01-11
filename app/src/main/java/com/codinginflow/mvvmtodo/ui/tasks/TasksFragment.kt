@@ -34,6 +34,8 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
     //TODO: Read property delegate
     private val viewModel: TaskViewModel by viewModels()
 
+    private lateinit var searchView : SearchView
+
     //is called when layout was instantiated
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -158,7 +160,15 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
         //as is casting the view to SearchView
         //actionView for search item is the view that is shown as textbox when searchicon is clicked
         //kotlin has shorthand syntax for getter and setter which can be directly called with the proerty name
-        val searchView = searchItem.actionView as SearchView
+        searchView = searchItem.actionView as SearchView
+
+        //Hack for searchView not persisting
+        val pendingQuery = viewModel.searchVal.value
+        if(pendingQuery != null && pendingQuery.isNotEmpty()){
+            searchItem.expandActionView()
+            searchView.setQuery(pendingQuery, false)
+        }
+
 
         //Below we can write directy write what we want to do when a text is typed in searchView but, we will create a util to do this
         //This is the funciton we create in utils that is expecting a listener lambda function
@@ -220,4 +230,12 @@ class TasksFragment : Fragment(R.layout.fragman_tasks), TaskAdapter.onItemClickL
     override fun onCheckBoxClick(task: Task, isChecked: Boolean) {
         viewModel.onTaskCheckedChanged(task, isChecked)
     }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        searchView.setOnQueryTextListener(null)
+
+    }
+
+
 }
